@@ -12,16 +12,6 @@ class App:
         screenHeight= self.window.winfo_screenheight()               
         self.window.geometry("%dx%d" % (screenWidth, screenHeight))
 
-        # # set up grid columns
-        # self.window.columnconfigure(0, weight=2)
-        # self.window.columnconfigure(1, weight=2)
-        # self.window.rowconfigure(0, weight=1)
-        # self.window.rowconfigure(1, weight=1)
-        # self.window.rowconfigure(2, weight=1)
-        # self.window.rowconfigure(3, weight=1)
-        # self.window.rowconfigure(4, weight=1)
-        # self.window.rowconfigure(5, weight=1)
-
         # Load an image using OpenCV
         self.image_path = image_path
         self.cv_img = cv2.imread(self.image_path, 0)
@@ -66,7 +56,10 @@ class App:
         self.btn_lowpass_filter.grid(column=2, row=4, columnspan=2, padx=5, pady=5)
 
         self.btn_highpass_butterworth=tkinter.Button(window, text="High-pass Butterworth", width=50,command=self.highpass_butterworth)
-        self.btn_highpass_butterworth.grid(column=2, row=5, columnspan=2, padx=5, pady=5)
+        self.btn_highpass_butterworth.grid(column=2, row=5, columnspan=1, padx=5, pady=5)
+
+        self.btn_highpass_ideal=tkinter.Button(window, text="High-pass Ideal", width=50,command=self.highpass_ideal)
+        self.btn_highpass_ideal.grid(column=3, row=5, columnspan=1, padx=5, pady=5)
 
 
  
@@ -160,7 +153,28 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_ideal(self):
-        pass
+        F = np.fft.fft2(self.mofied_Img)
+        M, N = self.mofied_Img.shape
+        n = self.scaler1.get()
+        D0 = self.scaler2.get()
+        u = np.arange(0, M, 1)
+        v = np.arange(0,N,1)
+        idx = (u > M/2)
+        u[idx] = u[idx] - M
+        idy = (v > N/2)
+        v[idy] = v[idy] - N
+        [V, U] = np.meshgrid(v, u)
+        D = np.sqrt(np.power(U, 2) + np.power(V, 2))
+        H = np.double(D > D0)
+        print(D)
+        print(D0)
+        print(H)
+        G = H * F
+        imgOut = np.real(np.fft.ifft2(G))
+        self.mofied_Img = imgOut
+
+        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.mofied_Img))
+        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_gaussian(self):
         pass
