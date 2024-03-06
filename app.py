@@ -67,7 +67,7 @@ class App:
         self.btn_highpass_butterworth=tkinter.Button(window, text="High-pass Butterworth", width=self.button_width,command=self.highpass_butterworth_color)
         self.btn_highpass_butterworth.grid(column=2, row=6, columnspan=1, padx=5, pady=5)
 
-        self.btn_highpass_ideal=tkinter.Button(window, text="High-pass Ideal", width=self.button_width,command=self.highpass_ideal)
+        self.btn_highpass_ideal=tkinter.Button(window, text="High-pass Ideal", width=self.button_width,command=self.highpass_ideal_color)
         self.btn_highpass_ideal.grid(column=3, row=6, columnspan=1, padx=5, pady=5)
 
         self.btn_erode=tkinter.Button(window, text="Erode Img", width=self.button_width,command=self.erode_img)
@@ -134,9 +134,9 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
     
     def lowpass_filter_color(self):
-        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(img_rgb)
-        scaler = self.scaler2.get()
+        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(self.modified_img)
+        # scaler = self.scaler2.get()
         R = self.lowpass_filter(r)
         G = self.lowpass_filter(g)
         B = self.lowpass_filter(b)
@@ -167,8 +167,8 @@ class App:
         # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_butterworth_color(self):
-        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(img_rgb)
+        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(self.modified_img)
         # scaler = self.scaler2.get()
         R = self.highpass_butterworth(r)
         G = self.highpass_butterworth(g)
@@ -200,9 +200,21 @@ class App:
         # self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
         # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
-    def highpass_ideal(self):
-        F = np.fft.fft2(self.modified_img)
-        M, N = self.modified_img.shape
+    def highpass_ideal_color(self):
+        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(self.modified_img)
+        # scaler = self.scaler2.get()
+        R = self.highpass_ideal(r)
+        G = self.highpass_ideal(g)
+        B = self.highpass_ideal(b)
+        self.modified_img = cv2.merge((R, G, B)) 
+        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
+        
+        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
+
+    def highpass_ideal(self, img):
+        F = np.fft.fft2(img)
+        M, N = img.shape
         n = self.scaler1.get()
         D0 = self.scaler2.get()
         u = np.arange(0, M, 1)
@@ -214,15 +226,13 @@ class App:
         [V, U] = np.meshgrid(v, u)
         D = np.sqrt(np.power(U, 2) + np.power(V, 2))
         H = np.double(D > D0)
-        print(D)
-        print(D0)
-        print(H)
         G = H * F
         imgOut = np.real(np.fft.ifft2(G))
-        self.modified_img = imgOut
+        return imgOut
+        # self.modified_img = imgOut
 
-        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
-        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
+        # self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
+        # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_gaussian(self):
         pass
