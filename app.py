@@ -58,7 +58,7 @@ class App:
         self.btn_reset_img=tkinter.Button(window, text="Reset Img", width=self.button_width,command=self.reset_image)
         self.btn_reset_img.grid(column=3, row=3, columnspan=1, padx=5, pady=5)
 
-        self.btn_filter=tkinter.Button(window, text="Filter", width=self.button_width,command=self.filter)
+        self.btn_filter=tkinter.Button(window, text="Filter", width=self.button_width,command=self.filter_color)
         self.btn_filter.grid(column=2, row=4, columnspan=2, padx=5, pady=5)
 
         self.btn_lowpass_filter=tkinter.Button(window, text="Low-pass Filter", width=self.button_width,command=self.lowpass_filter_color)
@@ -112,11 +112,21 @@ class App:
         # Add a PhotoImage to the Canvas
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
-    def filter(self):
+    def filter_color(self):
+        r,g,b = cv2.split(self.modified_img)
+        R = self.filter(r)
+        G = self.filter(g)
+        B = self.filter(b)
+        self.modified_img = cv2.merge((R, G, B)) 
+        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
+        
+        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
+
+    def filter(self, img):
         #Filtering
-        F = np.fft.fft2(self.modified_img)
+        F = np.fft.fft2(img)
         F = np.fft.fftshift(F)
-        M, N = self.modified_img.shape
+        M, N = img.shape
         D0 = self.scaler2.get()
 
         u = np.arange(0, M)-M/2
@@ -128,10 +138,9 @@ class App:
 
         G = np.fft.ifftshift(G)
         imgOut = np.real(np.fft.ifft2(G))
-        self.modified_img = imgOut
+        img = imgOut
 
-        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
-        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
+        return img
     
     def lowpass_filter_color(self):
         # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
@@ -261,10 +270,6 @@ class App:
         self.modified_img = cv2.erode(self.modified_img, kernel=kernel, borderType=cv2.BORDER_REFLECT)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
-
-    # def erode_img(self, img, kernel):
-    #     return cv2.erode(img, kernel=kernel, borderType=cv2.BORDER_REFLECT)
-        
 
     def dilate_img(self):
         kernel = np.ones((self.scaler3.get(), self.scaler3.get()), np.uint8)
