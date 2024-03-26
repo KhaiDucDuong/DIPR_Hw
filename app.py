@@ -41,7 +41,7 @@ class App:
         self.canvas_original_img.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
-
+        #scalers
         self.scaler1 = tkinter.Scale(window, from_=0, to=5,length=self.scaler_width, resolution=0.1, tickinterval=10, orient=tkinter.HORIZONTAL)
         self.scaler1.set(1)
         self.scaler1.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
@@ -52,36 +52,44 @@ class App:
         self.scaler3.set(10)
         self.scaler3.grid(row=2, column=2, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
 
+        #first buttons row
         self.btn_select_img=tkinter.Button(window, text="Select Img", width=self.button_width,command=self.select_image)
         self.btn_select_img.grid(column=2, row=3, columnspan=1, padx=5, pady=5)
 
         self.btn_reset_img=tkinter.Button(window, text="Reset Img", width=self.button_width,command=self.reset_image)
         self.btn_reset_img.grid(column=3, row=3, columnspan=1, padx=5, pady=5)
 
+        #second buttons row
         self.btn_filter=tkinter.Button(window, text="Filter", width=self.button_width,command=self.filter_color)
-        self.btn_filter.grid(column=2, row=4, columnspan=2, padx=5, pady=5)
+        self.btn_filter.grid(column=2, row=4, columnspan=1, padx=5, pady=5)
 
         self.btn_lowpass_filter=tkinter.Button(window, text="Low-pass Filter", width=self.button_width,command=self.lowpass_filter_color)
+        self.btn_lowpass_filter.grid(column=3, row=4, columnspan=1, padx=5, pady=5)
+
+        #third buttons row
+        self.btn_lowpass_filter=tkinter.Button(window, text="Black white img", width=self.button_width,command=self.blackWhiteBtnOnClick)
         self.btn_lowpass_filter.grid(column=2, row=5, columnspan=2, padx=5, pady=5)
 
+        #fourth buttons row
         self.btn_highpass_butterworth=tkinter.Button(window, text="High-pass Butterworth", width=self.button_width,command=self.highpass_butterworth_color)
         self.btn_highpass_butterworth.grid(column=2, row=6, columnspan=1, padx=5, pady=5)
 
         self.btn_highpass_ideal=tkinter.Button(window, text="High-pass Ideal", width=self.button_width,command=self.highpass_ideal_color)
         self.btn_highpass_ideal.grid(column=3, row=6, columnspan=1, padx=5, pady=5)
 
+        #fifth buttons row
         self.btn_erode=tkinter.Button(window, text="Erode Img", width=self.button_width,command=self.erode_img)
         self.btn_erode.grid(column=2, row=7, columnspan=1, padx=5, pady=5)
 
         self.btn_dilate=tkinter.Button(window, text="Dilate Img", width=self.button_width,command=self.dilate_img)
         self.btn_dilate.grid(column=3, row=7, columnspan=1, padx=5, pady=5)
 
+        #sixth buttons row
         self.btn_opening=tkinter.Button(window, text="Openning Img", width=self.button_width,command=self.opening_img)
         self.btn_opening.grid(column=2, row=8, columnspan=1, padx=5, pady=5)
 
         self.btn_closing=tkinter.Button(window, text="Closing Img", width=self.button_width,command=self.closing_img)
         self.btn_closing.grid(column=3, row=8, columnspan=1, padx=5, pady=5)
-
  
         self.window.mainloop()
 
@@ -257,6 +265,14 @@ class App:
         ret, bw_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
         bw = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)  
         return bw_img
+
+    def blackWhiteBtnOnClick(self):
+        self.modified_img = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2GRAY)
+        # Use PIL (Pillow) to convert the NumPy ndarray to a PhotoImage
+        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
+
+        # Add a PhotoImage to the Canvas
+        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def erode_img(self):
         # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
