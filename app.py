@@ -137,8 +137,6 @@ class App:
         B =self.convoluteImg(b, kernel)
         return np.array(cv2.merge((R,G,B)), dtype='uint8')
 
-
-
     def convoluteImg(self, img, kernel):
         kh, kw = kernel.shape
         h,w = img.shape
@@ -208,8 +206,8 @@ class App:
         return img
     
     def lowpass_filter_color(self):
-        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(img_rgb)
+        #img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(self.modified_img)
         # scaler = self.scaler2.get()
         R = self.lowpass_filter(r)
         G = self.lowpass_filter(g)
