@@ -184,23 +184,6 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_butterworth(self, img):
-        # F = np.fft.fft2(img)
-        # M, N = img.shape
-        # n = self.scaler1.get()
-        # D0 = self.scaler2.get()
-        # u = np.arange(0, M, 1)
-        # v = np.arange(0,N,1)
-        # idx = (u > M/2)
-        # u[idx] = u[idx] - M
-        # idy = (v > N/2)
-        # v[idy] = v[idy] - N
-        # [V, U] = np.meshgrid(v, u)
-        # D = np.sqrt(np.power(U, 2) + np.power(V, 2))
-        # H = 1/np.power(1 + (D0/(D+1e-10)), 2*n)
-        # G = H * F
-        # imgOut = np.real(np.fft.ifft2(G))
-        # return imgOut
-
         F = np.fft.fft2(img)
         F_shift = np.fft.fftshift(F)
         D0 = self.scaler2.get()
@@ -220,11 +203,6 @@ class App:
         g = np.clip(g, 0, 255)
 
         return g
-
-        # self.modified_img = imgOut
-
-        # self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
-        # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_ideal_color(self):
         img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
@@ -262,31 +240,14 @@ class App:
         g = np.clip(g, 0, 255)
 
         return g
-    
-        F = np.fft.fft2(img)
-        M, N = img.shape
-        n = self.scaler1.get()
-        D0 = self.scaler2.get()
-        u = np.arange(0, M, 1)
-        v = np.arange(0,N,1)
-        idx = (u > M/2)
-        u[idx] = u[idx] - M
-        idy = (v > N/2)
-        v[idy] = v[idy] - N
-        [V, U] = np.meshgrid(v, u)
-        D = np.sqrt(np.power(U, 2) + np.power(V, 2))
-        H = np.double(D > D0)
-        G = H * F
-        imgOut = np.real(np.fft.ifft2(G))
-        return imgOut
-        # self.modified_img = imgOut
-
-        # self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
-        # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_gaussian(self):
         pass
 
+    def createBinaryImg(self, img):
+        ret, bw_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+        bw = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)  
+        return bw_img
 
     def erode_img(self):
         # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
@@ -296,6 +257,7 @@ class App:
         # G = cv2.erode(g, kernel=kernel)
         # B = cv2.erode(b, kernel=kernel)
         # self.modified_img = cv2.merge((R, G, B))
+        self.modified_img = self.createBinaryImg(img=self.modified_img)
         self.modified_img = cv2.erode(self.modified_img, kernel=kernel, borderType=cv2.BORDER_REFLECT)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
@@ -306,6 +268,7 @@ class App:
 
     def dilate_img(self):
         kernel = np.ones((self.scaler3.get(), self.scaler3.get()), np.uint8)
+        self.modified_img = self.createBinaryImg(img=self.modified_img)
         self.modified_img = cv2.dilate(self.modified_img, kernel=kernel)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
