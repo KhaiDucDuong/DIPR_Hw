@@ -112,7 +112,7 @@ class App:
     
     @staticmethod
     def splitImgRGB(img):
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return cv2.split(img)
 
     def confirmBtnOnClick(self):
@@ -239,12 +239,12 @@ class App:
         # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_butterworth_color(self):
-        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
 
         # self.modified_img = cv2.imread(self.image_path, 0)
         # self.modified_img = cv2.resize(self.modified_img, (int(self.img_width), int(self.img_height)), interpolation= cv2.INTER_LINEAR)
         
-        r,g,b = cv2.split(img_rgb)
+        r,g,b = cv2.split(self.modified_img)
         # scaler = self.scaler2.get()
         R = self.highpass_butterworth(r)
         G = self.highpass_butterworth(g)
@@ -277,8 +277,8 @@ class App:
         return g
 
     def highpass_ideal_color(self):
-        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(img_rgb)
+        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(self.modified_img)
         # scaler = self.scaler2.get()
         R = self.highpass_ideal(r)
         G = self.highpass_ideal(g)
@@ -330,13 +330,7 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def erode_img(self):
-        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        # r,g,b = cv2.split(img_rgb)
         kernel = np.ones((self.scaler3.get(), self.scaler3.get()), np.uint8)
-        # R = cv2.erode(r, kernel=kernel)
-        # G = cv2.erode(g, kernel=kernel)
-        # B = cv2.erode(b, kernel=kernel)
-        # self.modified_img = cv2.merge((R, G, B))
         self.modified_img = self.createBinaryImg(img=self.modified_img)
         self.modified_img = cv2.erode(self.modified_img, kernel=kernel, borderType=cv2.BORDER_REFLECT)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
