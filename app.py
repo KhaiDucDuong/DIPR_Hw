@@ -167,42 +167,68 @@ class App:
         # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_butterworth_color(self):
-        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(self.modified_img)
+        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+
+        # self.modified_img = cv2.imread(self.image_path, 0)
+        # self.modified_img = cv2.resize(self.modified_img, (int(self.img_width), int(self.img_height)), interpolation= cv2.INTER_LINEAR)
+        
+        r,g,b = cv2.split(img_rgb)
         # scaler = self.scaler2.get()
         R = self.highpass_butterworth(r)
         G = self.highpass_butterworth(g)
         B = self.highpass_butterworth(b)
         self.modified_img = cv2.merge((R, G, B)) 
+        # self.modified_img = self.highpass_butterworth(self.modified_img)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
         
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_butterworth(self, img):
+        # F = np.fft.fft2(img)
+        # M, N = img.shape
+        # n = self.scaler1.get()
+        # D0 = self.scaler2.get()
+        # u = np.arange(0, M, 1)
+        # v = np.arange(0,N,1)
+        # idx = (u > M/2)
+        # u[idx] = u[idx] - M
+        # idy = (v > N/2)
+        # v[idy] = v[idy] - N
+        # [V, U] = np.meshgrid(v, u)
+        # D = np.sqrt(np.power(U, 2) + np.power(V, 2))
+        # H = 1/np.power(1 + (D0/(D+1e-10)), 2*n)
+        # G = H * F
+        # imgOut = np.real(np.fft.ifft2(G))
+        # return imgOut
+
         F = np.fft.fft2(img)
-        M, N = img.shape
-        n = self.scaler1.get()
+        F_shift = np.fft.fftshift(F)
         D0 = self.scaler2.get()
-        u = np.arange(0, M, 1)
-        v = np.arange(0,N,1)
-        idx = (u > M/2)
-        u[idx] = u[idx] - M
-        idy = (v > N/2)
-        v[idy] = v[idy] - N
-        [V, U] = np.meshgrid(v, u)
-        D = np.sqrt(np.power(U, 2) + np.power(V, 2))
-        H = 1/np.power(1 + (D0/(D+1e-10)), 2*n)
-        G = H * F
-        imgOut = np.real(np.fft.ifft2(G))
-        return imgOut
+
+        M, N = img.shape
+        H = np.zeros((M, N), dtype=np.float32)
+        n = 1
+        for u in range(M):
+            for v in range(N):
+                D = np.sqrt((u-M/2)**2 + (v-N/2)**2)
+                H[u, v] = 1 / (1 + (D0/D)**n)
+
+        G_shift = F_shift * H
+
+        G = np.fft.ifftshift(G_shift)
+        g = np.abs(np.fft.ifft2(G))
+        g = np.clip(g, 0, 255)
+
+        return g
+
         # self.modified_img = imgOut
 
         # self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.modified_img))
         # self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_ideal_color(self):
-        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(self.modified_img)
+        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(img_rgb)
         # scaler = self.scaler2.get()
         R = self.highpass_ideal(r)
         G = self.highpass_ideal(g)
@@ -213,6 +239,30 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
     def highpass_ideal(self, img):
+        D0 = self.scaler2.get()
+        F = np.fft.fft2(img)
+        F_shift = np.fft.fftshift(F)
+
+        M, N = img.shape
+
+        H = np.zeros((M, N), dtype=np.float32)
+
+        for u in range(M):
+            for v in range(N):
+                D = np.sqrt((u - M/2)**2 + (v - N/2)**2)
+                if D <= D0:
+                    H[u, v] = 0
+                else:
+                    H[u, v] = 1
+
+        G_shift = F_shift * H
+
+        G = np.fft.ifftshift(G_shift)
+        g = np.abs(np.fft.ifft2(G))
+        g = np.clip(g, 0, 255)
+
+        return g
+    
         F = np.fft.fft2(img)
         M, N = img.shape
         n = self.scaler1.get()
