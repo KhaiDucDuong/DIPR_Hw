@@ -1,5 +1,6 @@
 import cv2
 import tkinter
+from tkinter import ttk
 from tkinter import filedialog as fd
 import numpy as np
 import PIL.Image, PIL.ImageTk
@@ -15,7 +16,6 @@ class App:
         self.img_height = screenHeight / 2 - 50
         self.scaler_width = screenWidth / 2 - 50
         self.button_width = 50
-        print(int(self.img_width))
         # Load an image using OpenCV
         self.image_path = image_path
         self.cv_img = cv2.cvtColor(cv2.imread(self.image_path), cv2.COLOR_BGR2RGB)
@@ -42,13 +42,13 @@ class App:
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
         #scalers
-        self.scaler1 = tkinter.Scale(window, from_=0, to=5,length=self.scaler_width, resolution=0.1, tickinterval=10, orient=tkinter.HORIZONTAL)
+        self.scaler1 = tkinter.Scale(window, from_=0, to=5,length=self.scaler_width, resolution=0.1, tickinterval=10, orient=tkinter.HORIZONTAL, label="Cutoff frequency N")
         self.scaler1.set(1)
         self.scaler1.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
-        self.scaler2 = tkinter.Scale(window, from_=0, to=100,length=self.scaler_width, tickinterval=10, orient=tkinter.HORIZONTAL)
+        self.scaler2 = tkinter.Scale(window, from_=0, to=100,length=self.scaler_width, tickinterval=10, orient=tkinter.HORIZONTAL, label="Radius D0")
         self.scaler2.set(50)
         self.scaler2.grid(row=1, column=2, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
-        self.scaler3 = tkinter.Scale(window, from_=0, to=50,length=self.scaler_width, tickinterval=5, orient=tkinter.HORIZONTAL)
+        self.scaler3 = tkinter.Scale(window, from_=0, to=50,length=self.scaler_width, tickinterval=5, orient=tkinter.HORIZONTAL, label="Kernel size")
         self.scaler3.set(10)
         self.scaler3.grid(row=2, column=2, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
 
@@ -68,7 +68,11 @@ class App:
 
         #third buttons row
         self.btn_lowpass_filter=tkinter.Button(window, text="Black white img", width=self.button_width,command=self.blackWhiteBtnOnClick)
-        self.btn_lowpass_filter.grid(column=2, row=5, columnspan=2, padx=5, pady=5)
+        self.btn_lowpass_filter.grid(column=2, row=5, columnspan=1, padx=5, pady=5)
+
+        self.optionComboBox=ttk.Combobox(window, width=self.button_width)
+        self.optionComboBox.grid(column=3, row=5, columnspan=1, padx=5, pady=5)
+        self.optionComboBox['values'] = ('Convolution', 'Negative Img', 'Log Transformations', 'Power Law Transformations')
 
         #fourth buttons row
         self.btn_highpass_butterworth=tkinter.Button(window, text="High-pass Butterworth", width=self.button_width,command=self.highpass_butterworth_color)
@@ -90,8 +94,61 @@ class App:
 
         self.btn_closing=tkinter.Button(window, text="Closing Img", width=self.button_width,command=self.closing_img)
         self.btn_closing.grid(column=3, row=8, columnspan=1, padx=5, pady=5)
- 
+
+        #seventh butotns row
+        self.confirmBtn=tkinter.Button(window, text="Confirm", width=self.button_width,command=self.confirmBtnOnClick)
+        self.confirmBtn.grid(column=3, row=9, columnspan=1, padx=5, pady=5)
+
         self.window.mainloop()
+
+    @staticmethod
+    def gaussian_kernel(size, sigma=1):
+        size = size // 2
+        x, y = np.mgrid[-size:size+1, -size:size+1]
+        normal = 1 / (2.0 * np.pi * sigma**2)
+        g =  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
+        print(g)
+        return g
+    
+    @staticmethod
+    def splitImgRGB(img):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return cv2.split(img)
+
+    def confirmBtnOnClick(self):
+        selectedOption = self.optionComboBox.get()
+        print(selectedOption)
+        match selectedOption:
+            case "":
+                tkinter.messagebox.showinfo("Error",  "Please select an option!")
+            case "Convolution":
+                kernel = self.gaussian_kernel(self.scaler3.get())
+                self.modified_img = self.convoluteColorImg(self.modified_img, kernel)
+            case _:
+                tkinter.messagebox.showinfo("Error",  "Something went wrong!")
+
+        self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
+        self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
+
+    def convoluteColorImg(self, img, kernel):
+        r,g,b = self.splitImgRGB(self.modified_img)
+        R =self.convoluteImg(r, kernel)
+        G =self.convoluteImg(g, kernel)
+        B =self.convoluteImg(b, kernel)
+        return np.array(cv2.merge((R,G,B)), dtype='uint8')
+
+
+
+    def convoluteImg(self, img, kernel):
+        kh, kw = kernel.shape
+        h,w = img.shape
+        B =np.ones((h,w))
+        for i in range(0, h-kh+1):
+            for j in range(0, w-kw+1):
+                sA=img[i:i+kh, j:j+kw]
+                B[i,j]=np.sum(kernel*sA)
+        B=B[0:h-kh+1,0:w-kw+1]
+        return B
 
     def select_image(self):
         filename = fd.askopenfilename()
@@ -151,8 +208,8 @@ class App:
         return img
     
     def lowpass_filter_color(self):
-        # img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
-        r,g,b = cv2.split(self.modified_img)
+        img_rgb = cv2.cvtColor(self.modified_img, cv2.COLOR_BGR2RGB)
+        r,g,b = cv2.split(img_rgb)
         # scaler = self.scaler2.get()
         R = self.lowpass_filter(r)
         G = self.lowpass_filter(g)
