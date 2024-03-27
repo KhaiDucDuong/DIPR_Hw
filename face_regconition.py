@@ -1,9 +1,10 @@
 import cv2
 import sys
 
-cascPath = "haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascPath)
-
+faceCascPath = "haarcascade_frontalface_default.xml"
+fullBobyCascPath = "haarcascade_fullbody.xml"
+faceCascade = cv2.CascadeClassifier(faceCascPath)
+fullBobyCascade = cv2.CascadeClassifier(fullBobyCascPath)
 video_capture = cv2.VideoCapture(0)
 
 while True:
@@ -20,9 +21,20 @@ while True:
         flags=cv2.CASCADE_SCALE_IMAGE
     )
 
+    fullBodies = fullBobyCascade.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30, 30),
+        flags=cv2.CASCADE_SCALE_IMAGE
+    )
+
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+    for (x, y, w, h) in fullBodies:
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 0), 2)
 
     # Display the resulting frame
     cv2.imshow('Video', frame)
