@@ -4,6 +4,8 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 import numpy as np
 import PIL.Image, PIL.ImageTk
+from skimage.feature import hog
+from skimage.transform import resize
 
 class App:
     def __init__(self, window, window_title, image_path="assets/95.jpg"):
@@ -72,7 +74,7 @@ class App:
 
         self.optionComboBox=ttk.Combobox(window, width=self.button_width)
         self.optionComboBox.grid(column=3, row=5, columnspan=1, padx=5, pady=5)
-        self.optionComboBox['values'] = ('Convolution', 'Negative Img', 'Log Transformations', 'Power Law Transformations')
+        self.optionComboBox['values'] = ('Convolution', 'Negative Img', 'Log Transformations', 'Power Law Transformations', 'Hog Feature')
 
         #fourth buttons row
         self.btn_highpass_butterworth=tkinter.Button(window, text="High-pass Butterworth", width=self.button_width,command=self.highpass_butterworth_color)
@@ -126,9 +128,12 @@ class App:
                 self.modified_img = self.convoluteColorImg(kernel)
             case "Negative Img":
                 self.modified_img = self.negativeImg(self.modified_img)
+            case "Hog Feature":
+                self.modified_img = self.extractHogFeature(self.modified_img)
             case _:
                 tkinter.messagebox.showinfo("Error",  "Something went wrong!")
 
+        # self.modified_img = cv2.resize(self.modified_img, (int(self.img_width), int(self.img_height)), interpolation= cv2.INTER_LINEAR)
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
@@ -367,5 +372,12 @@ class App:
     def closing_img(self):
         self.erode_img()
         self.dilate_img()
+
+    @staticmethod
+    def extractHogFeature(img):
+        resized_img = resize(img, (128*4, 64*4))
+        fd, hog_image = hog(resized_img, orientations=9, pixels_per_cell=(8, 8),
+                	cells_per_block=(2, 2), visualize=True, channel_axis=2)
+        return hog_image * 255
 # Create a window and pass it to the Application object
 App(tkinter.Tk(), "Tkinter and OpenCV")
