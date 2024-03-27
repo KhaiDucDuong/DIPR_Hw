@@ -47,10 +47,10 @@ class App:
         self.scaler1 = tkinter.Scale(window, from_=0, to=5,length=self.scaler_width, resolution=0.1, tickinterval=10, orient=tkinter.HORIZONTAL, label="Cutoff frequency N")
         self.scaler1.set(1)
         self.scaler1.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
-        self.scaler2 = tkinter.Scale(window, from_=0, to=100,length=self.scaler_width, tickinterval=10, orient=tkinter.HORIZONTAL, label="Radius D0")
+        self.scaler2 = tkinter.Scale(window, from_=0, to=100,length=self.scaler_width, tickinterval=10, orient=tkinter.HORIZONTAL, label="Radius D0/ Constant c")
         self.scaler2.set(50)
         self.scaler2.grid(row=1, column=2, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
-        self.scaler3 = tkinter.Scale(window, from_=0, to=50,length=self.scaler_width, tickinterval=5, orient=tkinter.HORIZONTAL, label="Kernel size")
+        self.scaler3 = tkinter.Scale(window, from_=0, to=35,length=self.scaler_width, tickinterval=5, orient=tkinter.HORIZONTAL, label="Kernel size/ gamma")
         self.scaler3.set(10)
         self.scaler3.grid(row=2, column=2, columnspan=2, padx=5, pady=5, sticky=tkinter.E)
 
@@ -132,6 +132,10 @@ class App:
                 status, self.modified_img = self.logTransformations(self.modified_img, c=self.scaler2.get())
                 if status == False:
                     tkinter.messagebox.showinfo("Error",  "C value is too high!")
+            case "Power Law Transformations":
+                status, self.modified_img = self.powerLawTransformations(self.modified_img, c=self.scaler2.get(), gamma=self.scaler3.get())
+                if status == False:
+                    tkinter.messagebox.showinfo("Error",  "C value is too high!")
             case "Hog Feature":
                 self.modified_img = self.extractHogFeature(self.modified_img)
             case _:
@@ -184,6 +188,17 @@ class App:
             return (True, logImg)
         return (False, img_bgr)
     
+    @staticmethod
+    def powerLawTransformations(img, c, gamma):
+        img_bgr = img
+        img = np.array(img_bgr, 'float')
+        maxC = 255 / np.log(1 + np.max(img_bgr))
+        if(c >= 0 and c <= maxC):
+            gammaImg = c * np.power(img, gamma)
+            gammaImg = np.array(gammaImg, dtype='uint8')
+            return (True, gammaImg)
+        return (False, img_bgr)
+
     def select_image(self):
         filename = fd.askopenfilename()
         if filename:
