@@ -128,6 +128,10 @@ class App:
                 self.modified_img = self.convoluteColorImg(kernel)
             case "Negative Img":
                 self.modified_img = self.negativeImg(self.modified_img)
+            case "Log Transformations":
+                status, self.modified_img = self.logTransformations(self.modified_img, c=self.scaler2.get())
+                if status == False:
+                    tkinter.messagebox.showinfo("Error",  "C value is too high!")
             case "Hog Feature":
                 self.modified_img = self.extractHogFeature(self.modified_img)
             case _:
@@ -169,7 +173,17 @@ class App:
                 neg_img[i][j] = pixel
         return neg_img
 
-
+    @staticmethod
+    def logTransformations(img, c):
+        img_bgr = img
+        img = np.array(img_bgr, 'float')
+        maxC = 255 / np.log(1 + np.max(img_bgr))
+        if(c >= 0 and c <= maxC):
+            logImg = c * (np.log(img + 1))
+            logImg = np.array(logImg, dtype='uint8')
+            return (True, logImg)
+        return (False, img_bgr)
+    
     def select_image(self):
         filename = fd.askopenfilename()
         if filename:
