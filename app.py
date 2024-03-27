@@ -123,21 +123,24 @@ class App:
                 tkinter.messagebox.showinfo("Error",  "Please select an option!")
             case "Convolution":
                 kernel = self.gaussian_kernel(self.scaler3.get())
-                self.modified_img = self.convoluteColorImg(self.modified_img, kernel)
+                self.modified_img = self.convoluteColorImg(kernel)
+            case "Negative Img":
+                self.modified_img = self.negativeImg(self.modified_img)
             case _:
                 tkinter.messagebox.showinfo("Error",  "Something went wrong!")
 
         self.modified_photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(np.array(self.modified_img, dtype=np.uint8)))
         self.canvas_modified_img.create_image(0, 0, image=self.modified_photo, anchor=tkinter.NW)
 
-    def convoluteColorImg(self, img, kernel):
+    def convoluteColorImg(self, kernel):
         r,g,b = self.splitImgRGB(self.modified_img)
         R =self.convoluteImg(r, kernel)
         G =self.convoluteImg(g, kernel)
         B =self.convoluteImg(b, kernel)
         return np.array(cv2.merge((R,G,B)), dtype='uint8')
 
-    def convoluteImg(self, img, kernel):
+    @staticmethod
+    def convoluteImg(img, kernel):
         kh, kw = kernel.shape
         h,w = img.shape
         B =np.ones((h,w))
@@ -147,6 +150,20 @@ class App:
                 B[i,j]=np.sum(kernel*sA)
         B=B[0:h-kh+1,0:w-kw+1]
         return B
+
+    @staticmethod
+    def negativeImg(img, L=255):
+        h, w, channel=img.shape
+        neg_img = img
+        for i in range(0, h-1):
+            for j in range(0, w-1):
+                pixel = img[i][j]
+                pixel[0] = L - pixel[0]
+                pixel[1] = L - pixel[1]
+                pixel[2] = L - pixel[2]
+                neg_img[i][j] = pixel
+        return neg_img
+
 
     def select_image(self):
         filename = fd.askopenfilename()
